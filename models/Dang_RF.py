@@ -17,10 +17,7 @@ print("Đang tải dữ liệu...")
 train_df = pd.read_csv(TRAIN_FILE)
 test_df = pd.read_csv(TEST_FILE)
 
-# ==========================================================
-# ENCODE CATEGORICAL
-# ==========================================================
-
+# Encode categorical
 full_df = pd.concat([train_df, test_df], axis=0)
 full_df = pd.get_dummies(full_df)
 
@@ -34,41 +31,37 @@ X_test = test_df.drop(columns=['exam_score'])
 y_test = test_df['exam_score']
 
 # ==========================================================
-# RANDOM SEARCH SIÊU RỘNG
+# RANDOM SEARCH NHẸ HƠN
 # ==========================================================
 
 print("Đang tuning RandomForest...")
 
 param_dist = {
-    'n_estimators': [500, 1000, 1500, 2000, 3000],
-    'max_depth': [None, 10, 20, 30, 40, 50],
+    'n_estimators': [300, 500, 800, 1000],
+    'max_depth': [None, 10, 20, 30],
     'min_samples_split': [2, 5, 10],
     'min_samples_leaf': [1, 2, 4],
-    'max_features': ['sqrt', 'log2', None]
+    'max_features': ['sqrt', 'log2']
 }
 
-rf = RandomForestRegressor(random_state=42, n_jobs=-1)
+rf = RandomForestRegressor(random_state=42)
 
 cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
 random_search = RandomizedSearchCV(
     estimator=rf,
     param_distributions=param_dist,
-    n_iter=30,                # thử 30 tổ hợp mạnh
+    n_iter=15,                 # giảm xuống 15
     cv=cv,
     scoring='neg_root_mean_squared_error',
     verbose=2,
     random_state=42,
-    n_jobs=-1
+    n_jobs=1                   # QUAN TRỌNG: tránh crash RAM
 )
 
 random_search.fit(X_train, y_train)
 
 print("Best parameters:", random_search.best_params_)
-
-# ==========================================================
-# TRAIN MODEL TỐT NHẤT
-# ==========================================================
 
 best_model = random_search.best_estimator_
 
