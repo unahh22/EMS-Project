@@ -11,6 +11,8 @@ from sklearn.utils import shuffle
 # 1. Đọc dữ liệu
 df = pd.read_csv('04_Normalized_Data.csv')
 
+
+data_path = "D:\ADY201m\dataADY201m_cleaned_normalized.csv"
 # Xác định features (X) và target (y)
 X = df.drop(columns=['exam_score'])
 y = df['exam_score']
