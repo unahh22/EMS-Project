@@ -7,7 +7,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 # LOAD DATA
 # ==============================
 
-data_path = "dataADY201m_cleaned_normalized.csv"
+data_path = "D:\ADY201m\dataADY201m_cleaned_normalized.csv"
 
 print("Loading file:", data_path)
 
