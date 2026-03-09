@@ -1,90 +1,93 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from sklearn.metrics import r2_score
 from sklearn.utils import shuffle
 
-# 1. Đọc dữ liệu
-df = pd.read_csv('04_Normalized_Data.csv')
+# ==========================================
+# STEP 0: LOAD DATA & PREPROCESSING
+# ==========================================
+file_path = r'D:\ADY201m\data\data.csv'
+df = pd.read_csv(file_path)
 
+print(f"Total initial rows: {len(df)}")
 
-data_path = "D:\ADY201m\dataADY201m_cleaned_normalized.csv"
-# Xác định features (X) và target (y)
+# 1. Clean numeric columns (> 0)
+numeric_cols = ['study_hours', 'age', 'class_attendance', 'sleep_hours']
+for col in numeric_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+df = df[(df[numeric_cols] > 0).all(axis=1)]
+
+# 2. Clean categorical columns (remove missing/zero values)
+df = df[~df['course'].isin([0, '0', '0.0'])]
+
+print(f"Total clean rows for training: {len(df)}\n")
+
+# ==========================================
+# PREPARE FEATURES (X) AND TARGET (y)
+# ==========================================
 X = df.drop(columns=['exam_score'])
 y = df['exam_score']
 
-# 2. Phân loại các cột để cấu hình Preprocessor
-categorical_cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
+# Convert categorical text columns (like 'course') into numbers (One-Hot Encoding)
+X = pd.get_dummies(X, drop_first=True)
 
-# 3. Tạo Preprocessor
-preprocessor = ColumnTransformer(
-    transformers=[
-        # Loại bỏ cột student_id
-        ('drop_id', 'drop', ['student_id']),
-        # Mã hoá One-Hot các cột phân loại
-        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_cols)
-    ],
-    # Giữ nguyên các cột số còn lại
-    remainder='passthrough'
-)
-
-# 4. Tạo Pipeline kết hợp preprocessor và Linear Regression
-pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('model', LinearRegression())
-])
-
-# Lưu trữ kết quả của các lần chạy
+# ==========================================
+# TASK 1: SHUFFLE, SPLIT, MODELING, ACCURACY (REPEAT 3 TIMES)
+# ==========================================
+model = LinearRegression()
 results = []
 
-# 5. Vòng lặp 3 lần đánh giá
+print("-" * 50)
+print("TASK 1: 3-FOLD SHUFFLE & TRAIN EVALUATION")
+print("-" * 50)
+
+# Repeat the process 3 times
 for i in range(3):
-    # Bước 5.1: Shuffle dataset (BỎ random_state để trộn ngẫu nhiên 100% qua mỗi vòng lặp)
-    X_shuffled, y_shuffled = shuffle(X, y)
-    
-    # Bước 5.2: Split dataset 90% train - 10% test (BỎ random_state để chia ngẫu nhiên)
+    # Step 1: Shuffle Dataset
+    X_shuffled, y_shuffled = shuffle(X, y, random_state=None)
+
+    # Step 2: Split dataset (Training/Test - 9/1)
     X_train, X_test, y_train, y_test = train_test_split(
-        X_shuffled, y_shuffled, 
-        test_size=0.1
+        X_shuffled, y_shuffled, test_size=0.1, random_state=None
     )
-    
-    # Bước 5.3: Huấn luyện mô hình (Tìm hàm số f(x))
-    pipeline.fit(X_train, y_train)
-    
-    # Bước 5.4: Dự đoán trên tập Test
-    y_pred = pipeline.predict(X_test)
-    
-    # Bước 5.5: Đánh giá độ chính xác
-    r2 = r2_score(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    mae = mean_absolute_error(y_test, y_pred)
-    
-    # Lưu kết quả
+
+    # Step 3: Modeling (Find function f(x))
+    model.fit(X_train, y_train)
+
+    # Step 4: Calculate Accuracy (R2 Score)
+    y_pred = model.predict(X_test)
+    accuracy = r2_score(y_test, y_pred)
+
+    # Save results to list
     results.append({
-        'Lần lặp': f'Lần {i + 1}',
-        'R2': r2,
-        'RMSE': rmse,
-        'MAE': mae
+        'Iteration': f'Run {i + 1}',
+        'Accuracy (R2)': accuracy
     })
 
-# 6. Tạo bảng và tính trung bình
+    print(f"Run {i + 1} - Accuracy (R2): {accuracy:.4f}")
+
+# ==========================================
+# FINAL RESULT: TABLE OF 3 EVALUATIONS & AVERAGE
+# ==========================================
+# Create DataFrame for the result table
 results_df = pd.DataFrame(results)
 
-# Tính trung bình các cột số
-mean_metrics = {
-    'Lần lặp': 'Trung bình',
-    'R2': results_df['R2'].mean(),
-    'RMSE': results_df['RMSE'].mean(),
-    'MAE': results_df['MAE'].mean()
-}
+# Calculate final average accuracy
+average_accuracy = results_df['Accuracy (R2)'].mean()
 
-# Thêm hàng trung bình vào cuối bảng
-final_df = pd.concat([results_df, pd.DataFrame([mean_metrics])], ignore_index=True)
+# Add average row to the table
+mean_row = pd.DataFrame([{
+    'Iteration': 'AVERAGE',
+    'Accuracy (R2)': average_accuracy
+}])
 
-# In kết quả
-print("Đánh giá độ chính xác (shuffle ngẫu nhiên hoàn toàn):\n")
-print(final_df.to_string(index=False))
+final_df = pd.concat([results_df, mean_row], ignore_index=True)
+
+print("\n" + "=" * 50)
+print("FINAL RESULT TABLE:")
+print("=" * 50)
+# Print the final table with formatted floating numbers
+print(final_df.to_string(index=False, float_format="%.4f"))
+print("=" * 50)

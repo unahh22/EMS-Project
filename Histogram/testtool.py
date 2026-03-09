@@ -1,13 +1,31 @@
 import pandas as pd
 from ydata_profiling import ProfileReport
 
-# Đọc file dữ liệu của dự án ADY201m
-df=pd.read_csv('D:\ADY201m\dataADY201m_cleaned_normalized.csv')
+# 1. Load bộ dữ liệu
+# Đảm bảo file data.csv nằm đúng thư mục
+file_path = r'D:\ADY201m\notebooks\dataADY201m_cleaned_normalized1.csv'
+df = pd.read_csv(file_path)
 
-# Khởi tạo báo cáo (Explorative=True để có phân tích sâu nhất)
-profile = ProfileReport(df, title="Báo cáo Phân tích Dữ liệu EWS", explorative=True)
+# 2. Khởi tạo báo cáo với cấu hình ĐÚNG VỊ TRÍ
+profile = ProfileReport(
+    df,
+    title="EWS Data Analysis Report - Verified Version",
+    explorative=True,
+    # Chuyển dark_mode vào trong html
+    html={
+        "dark_mode": True,
+        "full_width": True
+    },
+    # Chuyển author vào trong dataset
+    dataset={
+        "author": "Le Thanh Dien - Group 3",
+        "description": "Early Warning System Analysis",
+        "copyright_holder": "FPT University"
+    }
+)
 
-# Xuất ra file HTML
-profile.to_file("ews_analysis_report.html")
+# 3. Xuất ra file HTML
+output_file = "EWS_Profile_Report_v2.html"
+profile.to_file(output_file)
 
-print("Đã xong! Hãy mở file 'ews_analysis_report.html' để hưởng thụ thành quả.")
+print(f"SUCCESS: Report updated and saved to {output_file}!")
