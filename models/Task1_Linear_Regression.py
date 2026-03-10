@@ -8,21 +8,12 @@ from sklearn.utils import shuffle
 # ==========================================
 # STEP 0: LOAD DATA & PREPROCESSING
 # ==========================================
-file_path = r'D:\ADY201m\data\data.csv'
+file_path = r'D:\ADY201m\notebooks\dataADY201m_cleaned_normalized1.csv'
 df = pd.read_csv(file_path)
 
 print(f"Total initial rows: {len(df)}")
 
-# 1. Clean numeric columns (> 0)
-numeric_cols = ['study_hours', 'age', 'class_attendance', 'sleep_hours']
-for col in numeric_cols:
-    df[col] = pd.to_numeric(df[col], errors='coerce')
-df = df[(df[numeric_cols] > 0).all(axis=1)]
 
-# 2. Clean categorical columns (remove missing/zero values)
-df = df[~df['course'].isin([0, '0', '0.0'])]
-
-print(f"Total clean rows for training: {len(df)}\n")
 
 # ==========================================
 # PREPARE FEATURES (X) AND TARGET (y)
