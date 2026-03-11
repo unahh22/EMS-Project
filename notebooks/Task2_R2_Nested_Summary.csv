@@ -1,0 +1,16 @@
+Feature,Group,Avg_R2
+study_hours,Low,0.4084742173121554
+study_hours,Medium,0.397212379683876
+study_hours,High,0.37591376265769466
+class_attendance,Low,0.6923412676320068
+class_attendance,Medium,0.6905764287982459
+class_attendance,High,0.6847156375348359
+sleep_hours,Low,0.7304209211144181
+sleep_hours,Medium,0.7245608059830316
+sleep_hours,High,0.7232081188656906
+sleep_quality,Low,0.7094857289533301
+sleep_quality,Medium,0.7054174781573637
+sleep_quality,High,0.7057635811755971
+facility_rating,Low,0.732612412091625
+facility_rating,Medium,0.7273752719013534
+facility_rating,High,0.7188719196651716

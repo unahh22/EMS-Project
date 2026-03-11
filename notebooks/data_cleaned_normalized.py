@@ -1,45 +1,58 @@
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 # Load data
-df = pd.read_csv('D:\ADY201m\data\data.csv')
+file_path = r'D:\ADY201m\data\data.csv'
+df = pd.read_csv(file_path)
 print(f"Original count: {len(df)}") # Should be 20,000
 
 # ==========================================
-# CỰC KỲ QUAN TRỌNG: LỌC BỎ ZEROS (THE "REAL" CLEANING)
+# 1. LỌC BỎ ZEROS VÀ DỮ LIỆU LỖI
 # ==========================================
-# 1. Remove Zeros from numeric columns
 numeric_features = ['age', 'study_hours', 'class_attendance', 'sleep_hours']
 for col in numeric_features:
-    # Convert to numeric just in case there are strings
     df[col] = pd.to_numeric(df[col], errors='coerce')
-    # This is the line that actually REMOVES the rows:
     df = df[df[col] > 0]
 
-# 2. Remove '0' from categorical 'course'
 df = df[~df['course'].astype(str).isin(['0', '0.0', 'nan', 'None'])]
-
-print(f"Count after removing Zeros: {len(df)}") # This must be < 20,000!
+print(f"Count after removing Zeros & Invalid: {len(df)}")
 
 # ==========================================
-# TIẾP TỤC CÁC BƯỚC CŨ
+# [FIXED 1]: XỬ LÝ DỮ LIỆU THỨ BẬC (ORDINAL ENCODING)
 # ==========================================
-# 3. Standard cleanup (Optional since profiling shows 0 missing/duplicates)
-df = df.drop_duplicates().dropna()
+# Không dùng LabelEncoder nữa. Tự map bằng tay để máy hiểu đúng thứ tự:
+# Kém = 0, Trung bình = 1, Tốt/Khó = 2
+sleep_map = {'poor': 0, 'average': 1, 'good': 2}
+facility_map = {'low': 0, 'medium': 1, 'high': 2}
+exam_map = {'easy': 0, 'moderate': 1, 'hard': 2}
 
-# 4. Label Encoding
-categorical_cols = ['gender', 'course', 'internet_access', 'sleep_quality', 'study_method', 'facility_rating', 'exam_difficulty']
-for col in categorical_cols:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col].astype(str))
+df['sleep_quality'] = df['sleep_quality'].map(sleep_map)
+df['facility_rating'] = df['facility_rating'].map(facility_map)
+df['exam_difficulty'] = df['exam_difficulty'].map(exam_map)
 
-# 5. Min-Max Scaling (Chỉ làm trên data ĐÃ SẠCH)
+# ==========================================
+# [FIXED 2]: XỬ LÝ DỮ LIỆU DANH NGHĨA (ONE-HOT ENCODING)
+# ==========================================
+# Dùng get_dummies để các khóa học (course), giới tính... bình đẳng với nhau
+nominal_cols = ['gender', 'course', 'internet_access', 'study_method']
+df = pd.get_dummies(df, columns=nominal_cols, drop_first=True)
+
+# ==========================================
+# [FIXED 3]: CHUẨN HÓA MIN-MAX SCALING
+# ==========================================
+# Chỉ scale các biến số, không đụng vào các biến chữ đã mã hóa ở trên
 scaler = MinMaxScaler()
 df[numeric_features] = scaler.fit_transform(df[numeric_features])
 
-# 6. Final Export
-df_final = df.drop(columns=['student_id']) if 'student_id' in df.columns else df
-df_final.to_csv('dataADY201m_cleaned_normalized1.csv', index=False)
+# ==========================================
+# 4. XUẤT FILE CHUẨN MỰC
+# ==========================================
+# Đã loại bỏ lệnh drop_duplicates() để giữ lại mật độ sinh viên thực tế
+if 'student_id' in df.columns:
+    df = df.drop(columns=['student_id'])
 
-print(f"Final exported rows: {len(df_final)}")
-print("SUCCESS: Data cleaned and saved!")
+output_path = r'D:\ADY201m\notebooks\dataADY201m_cleaned_normalized1.csv'
+df.to_csv(output_path, index=False)
+
+print(f"Final exported rows: {len(df)}")
+print(f"SUCCESS: Data mathematically corrected and saved to {output_path}!")
