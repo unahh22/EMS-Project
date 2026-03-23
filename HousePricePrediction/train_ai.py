@@ -52,7 +52,7 @@ try:
     conn = sqlite3.connect('db.sqlite3')
     cursor = conn.cursor()
     
-    # --- ĐOẠN CODE PHÉP MÀU: Tự động tạo bảng nếu trên máy Leader chưa có ---
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS ai_model_storage (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
